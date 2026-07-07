@@ -68,6 +68,7 @@ const emptyCase: CaseForm = {
 };
 
 function App() {
+  const applicationBase = import.meta.env.BASE_URL.replace(/\/$/, "");
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [username, setUsername] = useState(
     localStorage.getItem("username") || "",
@@ -91,7 +92,7 @@ function App() {
   const [caseForm, setCaseForm] = useState(emptyCase);
   const [registerMode, setRegisterMode] = useState(false);
   async function api(path: string, options: RequestInit = {}) {
-    const r = await fetch("/api" + path, {
+    const r = await fetch(applicationBase + "/api" + path, {
       ...options,
       headers: {
         "Content-Type": "application/json",
