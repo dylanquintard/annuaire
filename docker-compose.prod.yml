@@ -48,7 +48,7 @@ services:
     build:
       context: ./client
       args:
-        VITE_BASE_PATH: /annuaire/
+        VITE_BASE_PATH: ${PUBLIC_BASE_PATH:-/}
     restart: unless-stopped
     expose: ["80"]
     depends_on:
