@@ -60,7 +60,20 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    networks: [internal]
+    networks: [internal, dokploy-network]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.annuaire-flow-os-http.rule=Host(`annuaire.flow-os.fr`)
+      - traefik.http.routers.annuaire-flow-os-http.entrypoints=web
+      - traefik.http.routers.annuaire-flow-os-http.middlewares=redirect-to-https@file
+      - traefik.http.routers.annuaire-flow-os-http.service=annuaire-flow-os
+      - traefik.http.routers.annuaire-flow-os-https.rule=Host(`annuaire.flow-os.fr`)
+      - traefik.http.routers.annuaire-flow-os-https.entrypoints=websecure
+      - traefik.http.routers.annuaire-flow-os-https.tls=true
+      - traefik.http.routers.annuaire-flow-os-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.annuaire-flow-os-https.service=annuaire-flow-os
+      - traefik.http.services.annuaire-flow-os.loadbalancer.server.port=80
     security_opt: ["no-new-privileges:true"]
     logging:
       options: { max-size: "10m", max-file: "3" }
@@ -70,3 +83,5 @@ volumes:
 
 networks:
   internal:
+  dokploy-network:
+    external: true
