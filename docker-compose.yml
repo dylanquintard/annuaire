@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: annuaire_rp
+      POSTGRES_USER: annuaire
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U annuaire -d annuaire_rp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  server:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://annuaire:${DB_PASSWORD}@db:5432/annuaire_rp
+      JWT_SECRET: ${JWT_SECRET}
+      INITIAL_USERNAME: ${INITIAL_USERNAME}
+      INITIAL_PASSWORD: ${INITIAL_PASSWORD}
+      PORT: 3001
+    depends_on:
+      db:
+        condition: service_healthy
+  client:
+    build: ./client
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+volumes:
+  postgres_data:

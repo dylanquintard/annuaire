@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id           String        @id @default(cuid())
+  username     String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  members      Member[]
+  cases        Investigation[]
+  groups       RPGroup[]
+  relationships Relationship[]
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  firstName String
+  lastName  String
+  alias     String?
+  rank      String
+  phone     String?
+  notes     String?
+  mapX      Float?
+  mapY      Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  memberships GroupMembership[]
+  relationsFrom Relationship[] @relation("RelationFrom")
+  relationsTo   Relationship[] @relation("RelationTo")
+  @@index([accountId])
+}
+
+model Relationship {
+  id             String  @id @default(cuid())
+  accountId      String
+  account        Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  memberAId      String
+  memberA        Member  @relation("RelationFrom", fields: [memberAId], references: [id], onDelete: Cascade)
+  memberBId      String
+  memberB        Member  @relation("RelationTo", fields: [memberBId], references: [id], onDelete: Cascade)
+  relationAtoB   String
+  relationBtoA   String
+  createdAt      DateTime @default(now())
+  @@unique([accountId, memberAId, memberBId])
+  @@index([memberAId])
+  @@index([memberBId])
+}
+
+model RPGroup {
+  id           String   @id @default(cuid())
+  accountId    String
+  account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  name         String
+  kind         String   @default("GROUP")
+  alias        String?
+  activity     String?
+  phone        String?
+  notes        String?
+  mapX         Float?
+  mapY         Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  memberships GroupMembership[]
+  @@index([accountId])
+}
+
+model GroupMembership {
+  id        String  @id @default(cuid())
+  memberId  String
+  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     RPGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  role      String  @default("")
+  createdAt DateTime @default(now())
+  @@unique([memberId, groupId])
+  @@index([groupId])
+}
+
+model Investigation {
+  id          String   @id @default(cuid())
+  accountId   String
+  account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  title       String
+  status      String   @default("OUVERTE")
+  description String   @default("")
+  suspects    String   @default("")
+  evidence    String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  reports     Report[]
+  @@index([accountId])
+}
+
+model Report {
+  id              String        @id @default(cuid())
+  investigationId String
+  investigation   Investigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  reportDate      DateTime
+  title           String
+  details         String        @default("")
+  content         Json
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  @@index([investigationId, reportDate])
+}
